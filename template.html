@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pokémon Yellow Checklist</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14120b;--panel:#1f1c11;--line:#3a341b;--ink:#f6f0d4;--muted:#a8a07c;--y:#ffd84a;--r:#e3350d;--ok:#4ade80}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:24px 16px 8px;text-align:center}
+h1{font:20px/1.4 'Press Start 2P',monospace;color:var(--y);margin:0 0 6px;text-shadow:2px 2px 0 var(--r)}
+.sub{color:var(--muted);margin:0 0 14px}
+.bar{max-width:720px;margin:0 auto;height:16px;border:2px solid var(--line);border-radius:10px;background:#0c0b06;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--y),var(--ok));transition:width .3s}
+.counts{display:flex;gap:18px;justify-content:center;margin:10px 0;color:var(--muted)}
+.counts b{color:var(--ink)}
+.controls{position:sticky;top:0;z-index:5;background:rgba(20,18,11,.95);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+input[type=search],select,button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
+input[type=search]{min-width:220px}
+button{cursor:pointer}button:hover{border-color:var(--y)}
+main{max-width:1200px;margin:0 auto;padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center;cursor:pointer;transition:transform .1s,border-color .1s}
+.card:hover{transform:translateY(-2px);border-color:var(--y)}
+.card.caught{border-color:var(--ok);background:#18241a}
+.card img{width:96px;height:96px;image-rendering:pixelated;object-fit:contain}
+.card.caught img{filter:none}.card:not(.caught) img{filter:grayscale(.85) brightness(.7)}
+.num{color:var(--muted);font-size:12px}.card h3{margin:2px 0 6px;font-size:15px}
+.chk{position:absolute;top:8px;left:8px}.chk input{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
+.type{display:inline-block;margin:1px;padding:1px 8px;border-radius:999px;color:#fff;font-size:11px;text-transform:uppercase;font-weight:600;text-shadow:0 1px 1px rgba(0,0,0,.5)}
+.tag{display:inline-block;padding:1px 8px;border-radius:6px;background:#3a341b;color:var(--y);font-size:11px;margin:2px}
+dialog{width:min(760px,94vw);max-height:92vh;overflow:auto;background:var(--panel);color:var(--ink);border:2px solid var(--y);border-radius:14px;padding:0}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+.mh{display:flex;gap:16px;align-items:center;padding:18px;border-bottom:1px solid var(--line)}
+.mh img{width:120px;height:120px;image-rendering:pixelated}
+.mh h2{margin:0;font:16px 'Press Start 2P',monospace;color:var(--y)}
+.mb{padding:18px;display:grid;gap:16px}
+.mb h4{margin:0 0 6px;color:var(--y);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.stat{display:grid;grid-template-columns:36px 36px 1fr;gap:8px;align-items:center;font-size:13px}
+.stat span{height:8px;border-radius:4px;display:block}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:500}
+.evo button{margin:2px}
+textarea{width:100%;min-height:70px;background:#0c0b06;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit}
+.mf{display:flex;justify-content:space-between;gap:8px;padding:12px 18px;border-top:1px solid var(--line);align-items:center;position:sticky;bottom:0;background:var(--panel)}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:24px 16px 40px}
+footer a{color:var(--y)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Pokémon Yellow<br>Checklist</h1>
+  <p class="sub">Gotta catch all 151. Progress saves in your browser.</p>
+  <div class="bar"><i id="fill"></i></div>
+  <div class="counts"><span>Caught <b id="cCaught">0</b></span><span>Missing <b id="cMissing">0</b></span><span><b id="cPct">0%</b></span></div>
+</header>
+<div class="controls">
+  <input type="search" id="q" placeholder="Search name, #, or location (e.g. Route 22)">
+  <select id="type"><option value="">All types</option></select>
+  <select id="status"><option value="">All status</option><option value="caught">Caught</option><option value="missing">Missing</option></select>
+  <select id="how"><option value="">Any source</option><option value="wild">Wild</option><option value="special">Gift / static</option><option value="evolve">Evolution</option><option value="none">No wild source</option></select>
+  <button id="export">Export</button><button id="import">Import</button><button id="reset">Reset</button>
+  <input type="file" id="file" accept="application/json" hidden>
+</div>
+<main id="grid"></main>
+
+<dialog id="dlg">
+  <div id="modalBody"></div>
+  <div class="mf">
+    <div><button id="prev">&larr;</button> <button id="next">&rarr;</button></div>
+    <label><input type="checkbox" id="mcaught"> Caught</label>
+    <button id="close">Close</button>
+  </div>
+</dialog>
+
+<footer>
+  Data from <a href="https://pokeapi.co">PokéAPI</a>. Stats are modern base stats; types are Gen 1 typings.
+  Fan project, not affiliated with Nintendo, Game Freak, or The Pokémon Company.
+</footer>
+
+<script>
+const DATA = __DATA__;
+const KEY = "pokemon-yellow-checklist-v1";
+const COLORS = {normal:"#a8a77a",fire:"#ee8130",water:"#6390f0",electric:"#d4a90f",grass:"#4fa83d",ice:"#6cc6c6",fighting:"#c22e28",poison:"#a33ea1",ground:"#b9965a",flying:"#8f7be0",psychic:"#f95587",bug:"#a6b91a",rock:"#a38c21",ghost:"#735797",dragon:"#6f35fc",dark:"#705746",steel:"#8a8aa8",fairy:"#d685ad"};
+const METHODS = {walk:"Grass / cave","old-rod":"Old Rod","good-rod":"Good Rod","super-rod":"Super Rod",surf:"Surfing","only-one":"Static",gift:"Gift"};
+const $ = s => document.querySelector(s);
+const byId = Object.fromEntries(DATA.map(p => [p.id, p]));
+const pad = n => String(n).padStart(3, "0");
+const chip = t => `<span class="type" style="background:${COLORS[t]||"#777"}">${t}</span>`;
+const method = m => METHODS[m] || m.replace(/-/g, " ");
+let state = load(), cur = null;
+
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.caught)return{caught:s.caught,notes:s.notes||{}}}catch(e){}return{caught:{},notes:{}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+
+function ways(p){
+  const w=[];
+  if(p.encounters.some(e=>!["gift","only-one"].includes(e.method)))w.push("wild");
+  if(p.note||p.encounters.some(e=>["gift","only-one"].includes(e.method)))w.push("special");
+  if(p.evolves_from)w.push("evolve");
+  if(!p.encounters.length)w.push("none");
+  return w;
+}
+function visible(p){
+  const q=$("#q").value.trim().toLowerCase(),t=$("#type").value,s=$("#status").value,h=$("#how").value;
+  if(q&&!(p.name.toLowerCase().includes(q)||String(p.id)===q.replace("#","")||p.encounters.some(e=>e.loc.toLowerCase().includes(q))))return false;
+  if(t&&!p.types.includes(t))return false;
+  if(s==="caught"&&!state.caught[p.id])return false;
+  if(s==="missing"&&state.caught[p.id])return false;
+  if(h&&!ways(p).includes(h))return false;
+  return true;
+}
+function card(p){
+  const c=!!state.caught[p.id];
+  return `<article class="card ${c?"caught":""}" data-id="${p.id}">
+    <label class="chk"><input type="checkbox" ${c?"checked":""}></label>
+    <img loading="lazy" alt="${p.name}" src="${p.sprite}" onerror="this.onerror=null;this.src='${p.fallback}'">
+    <div class="num">#${pad(p.id)}</div><h3>${p.name}</h3><div>${p.types.map(chip).join("")}</div></article>`;
+}
+function render(){
+  const list=DATA.filter(visible);
+  $("#grid").innerHTML=list.length?list.map(card).join(""):'<div class="empty">No Pokémon match those filters.</div>';
+  const n=Object.keys(state.caught).filter(k=>state.caught[k]).length;
+  $("#cCaught").textContent=n;$("#cMissing").textContent=DATA.length-n;
+  const pct=Math.round(n/DATA.length*100);$("#cPct").textContent=pct+"%";$("#fill").style.width=pct+"%";
+}
+function toggle(id,v){if(v)state.caught[id]=true;else delete state.caught[id];save();render();}
+
+function evoBtns(list,label){
+  return list.length?`<div><b>${label}:</b> ${list.map(e=>`<button data-go="${e.id}">#${pad(e.id)} ${byId[e.id].name} <small>(${e.how})</small></button>`).join("")}</div>`:"";
+}
+function openModal(id){
+  const p=byId[id];if(!p)return;cur=id;
+  const stats=Object.entries(p.stats).map(([k,v])=>`<div class="stat"><span>${k}</span><b>${v}</b><span style="width:${Math.min(v/200*100,100)}%;background:${v>=100?"#4ade80":v>=60?"#ffd84a":"#e3350d"}"></span></div>`).join("");
+  const locs=p.encounters.length?`<table><tr><th>Location</th><th>Method</th><th>Level</th><th>Chance</th></tr>${p.encounters.map(e=>`<tr><td>${e.loc}</td><td>${method(e.method)}</td><td>${e.lo===e.hi?e.lo:e.lo+"-"+e.hi}</td><td>${e.chance}%</td></tr>`).join("")}</table>`:`<p>No wild encounters in Yellow.${p.evolves_from?" Evolve it from "+byId[p.evolves_from.id].name+".":" Check the notes above or trade for it."}</p>`;
+  $("#modalBody").innerHTML=`
+    <div class="mh"><img src="${p.sprite}" onerror="this.onerror=null;this.src='${p.fallback}'" alt="">
+      <div><div class="num">#${pad(p.id)} &middot; ${p.genus}</div><h2>${p.name}</h2><div>${p.types.map(chip).join("")}</div>
+      <div class="num">${p.height} m &middot; ${p.weight} kg &middot; catch rate ${p.catch_rate}</div></div></div>
+    <div class="mb">
+      ${p.note?`<div><h4>How to get it</h4><span class="tag">Special</span> ${p.note}</div>`:""}
+      ${p.entry?`<div><h4>Pokédex (Yellow)</h4><p>${p.entry}</p></div>`:""}
+      <div><h4>Base stats</h4>${stats}</div>
+      <div class="evo"><h4>Evolution</h4>${evoBtns(p.evolves_from?[p.evolves_from]:[],"From")}${evoBtns(p.evolves_to,"Into")}${!p.evolves_from&&!p.evolves_to.length?"Does not evolve.":""}</div>
+      <div><h4>Where to find it</h4>${locs}</div>
+      <div><h4>My notes</h4><textarea id="note" placeholder="Level, nickname, trade plans..."></textarea></div>
+    </div>`;
+  const ta=$("#note");ta.value=state.notes[id]||"";
+  ta.oninput=()=>{ta.value?state.notes[id]=ta.value:delete state.notes[id];save();};
+  $("#mcaught").checked=!!state.caught[id];
+  if(!$("#dlg").open)$("#dlg").showModal();
+}
+
+// setup
+[...new Set(DATA.flatMap(p=>p.types))].sort().forEach(t=>$("#type").insertAdjacentHTML("beforeend",`<option>${t}</option>`));
+["q","type","status","how"].forEach(i=>$("#"+i).addEventListener("input",render));
+$("#grid").addEventListener("click",e=>{
+  const c=e.target.closest(".card");if(!c)return;
+  if(e.target.closest(".chk")){if(e.target.matches("input"))toggle(+c.dataset.id,e.target.checked);return;}
+  openModal(+c.dataset.id);
+});
+$("#modalBody").addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b)openModal(+b.dataset.go);});
+$("#mcaught").addEventListener("change",e=>toggle(cur,e.target.checked));
+$("#close").onclick=()=>$("#dlg").close();
+$("#prev").onclick=()=>openModal(cur>1?cur-1:DATA.length);
+$("#next").onclick=()=>openModal(cur<DATA.length?cur+1:1);
+$("#dlg").addEventListener("click",e=>{if(e.target.id==="dlg")e.target.close();});
+$("#export").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"}));a.download="pokemon-yellow-progress.json";a.click();};
+$("#import").onclick=()=>$("#file").click();
+$("#file").onchange=async e=>{try{const s=JSON.parse(await e.target.files[0].text());if(!s.caught)throw 0;state={caught:s.caught,notes:s.notes||{}};save();render();}catch(x){alert("Invalid progress file.");}e.target.value="";};
+$("#reset").onclick=()=>{if(confirm("Clear all progress and notes?")){state={caught:{},notes:{}};save();render();}};
+render();
+</script>
+</body>
+</html>
